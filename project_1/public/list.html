@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediRx - Prescription Records Ledger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e2efff 50%, #edf4fc 100%);
+            min-height: 100vh;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 4rem;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #0284c7;
+            letter-spacing: -0.5px;
+        }
+
+        .brand span { color: #0f172a; font-weight: 400; }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #475569;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active { color: #0284c7; }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white !important;
+            padding: 8px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
+        }
+
+        .main-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 3rem 4rem;
+        }
+
+        .header-block {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .portal-heading { font-size: 2rem; color: #0f172a; font-weight: 800; }
+
+        .filter-row {
+            display: flex;
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 6px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .filter-btn {
+            padding: 8px 18px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .filter-btn.active {
+            background: #ffffff;
+            color: #0284c7;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);
+        }
+
+        .records-stack { display: flex; flex-direction: column; gap: 1.5rem; }
+
+        .record-card {
+            background: rgba(255, 255, 255, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.02);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.25s ease;
+        }
+
+        .record-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 15px 35px rgba(2, 132, 199, 0.05);
+        }
+
+        .record-meta-side { display: flex; flex-direction: column; gap: 0.75rem; max-width: 65%; }
+
+        .patient-header-line { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+        .patient-name { font-size: 1.25rem; font-weight: 700; color: #0f172a; }
+
+        .mrd-badge {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .type-badge {
+            display: inline-flex;
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .type-annual { background-color: #e0f2fe; color: #0369a1; }
+        .type-dexa { background-color: #fae8ff; color: #a21caf; }
+        .type-standard { background-color: #e2e8f0; color: #475569; }
+
+        /* Manual vs Auto Source Badges */
+        .source-badge-manual {
+            background-color: #dcfce7;
+            color: #166534;
+            padding: 3px 10px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: 1px solid #bbf7d0;
+        }
+
+        .source-badge-auto {
+            background-color: #f1f5f9;
+            color: #475569;
+            padding: 3px 10px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: 1px solid #cbd5e1;
+        }
+
+        .lab-metrics-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            color: #64748b;
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+
+        .lab-metrics-summary span strong { color: #334155; }
+
+        .date-stamp { font-size: 0.9rem; color: #94a3b8; font-weight: 500; margin-bottom: 4px;}
+
+        .record-action-side { display: flex; flex-direction: column; align-items: flex-end; gap: 0.75rem; max-width: 35%; }
+        
+        .action-icons-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .icon-action-btn, .history-dropdown-wrapper {
+            background: transparent;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+            color: #0f172a;
+        }
+
+        .icon-action-btn.view:hover { background: #e0f2fe; color: #0284c7; }
+        .icon-action-btn.update:hover { background: #fef3c7; color: #d97706; }
+        .icon-action-btn.delete:hover { background: #fee2e2; color: #ef4444; }
+        .history-dropdown-wrapper:hover { background: #f3e8ff; color: #a21caf; }
+
+        .icon-action-btn::after, .history-dropdown-wrapper::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%) translateY(4px);
+            background: #0f172a;
+            color: #ffffff;
+            padding: 5px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 6px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .icon-action-btn:hover::after, .history-dropdown-wrapper:hover::after {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .history-dropdown-wrapper { position: relative; }
+        .history-dropdown-wrapper svg { pointer-events: none; }
+
+        .history-dropdown {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-box {
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 2.5rem;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-title h3 { font-size: 1.5rem; color: #0f172a; margin-bottom: 1.5rem; }
+        .modal-fields-container { display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2rem; }
+        .modal-field-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .modal-field-group label { font-size: 0.85rem; font-weight: 600; color: #475569; }
+        .modal-field-group input, .modal-field-group select {
+            padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem;
+        }
+        .modal-action-row { display: flex; justify-content: flex-end; gap: 1rem; }
+        .btn-cancel { padding: 12px 24px; border: none; background: #f1f5f9; color: #475569; border-radius: 50px; font-weight: 600; cursor: pointer; }
+        .btn-save-confirm { padding: 12px 30px; border: none; background: linear-gradient(135deg, #38bdf8, #0284c7); color: white; border-radius: 50px; font-weight: 600; cursor: pointer; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem;
+            color: #64748b;
+            font-style: italic;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 24px;
+            border: 1px dashed #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="brand">MediRx<span>+</span></div>
+        <ul class="nav-links">
+            <li><a href="home.html">Dashboard</a></li>
+            <li><a href="generate.html">Generate Prescription</a></li>
+            <li><a href="manual.html">Manual Prescription</a></li>
+            <li><a href="#" class="active">Records</a></li>
+            <li><a href="index.html" class="btn-logout">Logout</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-container">
+        <div class="header-block">
+            <h1 class="portal-heading">Prescription Ledger Index</h1>
+            
+            <div class="filter-row">
+                <button class="filter-btn active" onclick="filterData('ALL', this)">All Track Types</button>
+                <button class="filter-btn" onclick="filterData('annual', this)">Annual Prescriptions</button>
+                <button class="filter-btn" onclick="filterData('dexa', this)">DEXA Scans</button>
+            </div>
+        </div>
+
+        <div class="records-stack" id="recordsStack"></div>
+    </main>
+
+    <div class="modal-overlay" id="updateModal">
+        <div class="modal-box">
+            <div class="modal-title"><h3>Modify Prescription Data Structure</h3></div>
+            <div class="modal-fields-container">
+                <input type="hidden" id="edit-id">
+                <div class="modal-field-group"><label>Patient Name</label><input type="text" id="edit-name"></div>
+                <div class="modal-field-group"><label>HC Value</label><input type="text" id="edit-hc"></div>
+                <div class="modal-field-group"><label>Vit D Value</label><input type="text" id="edit-vit"></div>
+                <div class="modal-field-group"><label>Fe Value</label><input type="text" id="edit-fe"></div>
+                
+                <div class="modal-field-group" id="shoulder-dropdown-group">
+                    <label id="shoulder-label">Shoulder Target Domain</label>
+                    <select id="edit-shoulder">
+                        <option value="LEFT">LEFT</option>
+                        <option value="RIGHT">RIGHT</option>
+                        <option value="BILATERAL">BILATERAL</option>
+                        <option value="-">-</option>
+                    </select>
+                </div>
+                <div class="modal-field-group" id="dynamic-modifier-group">
+                    <label id="dynamic-label">Variable Target Field</label>
+                    <input type="text" id="edit-custom-val">
+                </div>
+
+                <div class="modal-field-group" id="dexa-ls-group" style="display: none;">
+                    <label>Lateral Spine (LS)</label>
+                    <input type="number" step="any" id="edit-dexa-ls">
+                </div>
+                <div class="modal-field-group" id="dexa-hl-group" style="display: none;">
+                    <label>Hip & Lumbar Spine (HL)</label>
+                    <input type="number" step="any" id="edit-dexa-hl">
+                </div>
+
+            </div>
+            <div class="modal-action-row">
+                <button class="btn-cancel" onclick="closeUpdateModal()">Discard Changes</button>
+                <button class="btn-save-confirm" id="btnSaveConfirm" onclick="saveUpdatedRecordChanges()">Commit Updates</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDshtIK7BVa5gRVXL1TJB3yIlXWhbiNUsY",
+            authDomain: "mediscript-16c4b.firebaseapp.com",
+            projectId: "mediscript-16c4b",
+            storageBucket: "mediscript-16c4b.firebasestorage.app",
+            messagingSenderId: "452512782717",
+            appId: "1:452512782717:web:ca7c3bab69678efe019414"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let globalRecords = [];
+        let currentFilter = 'ALL';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadRecordsFromDatabase();
+        });
+
+        window.loadRecordsFromDatabase = async function() {
+            const container = document.getElementById('recordsStack');
+            container.innerHTML = '<div class="empty-state">Fetching real-time clinical database stack...</div>';
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "prescriptions"));
+                globalRecords = [];
+                
+                querySnapshot.forEach((docSnap) => {
+                    globalRecords.push({
+                        id: docSnap.id,
+                        ...docSnap.data()
+                    });
+                });
+
+                globalRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+                renderRecordsStack();
+            } catch (error) {
+                console.error("Firestore fetch error:", error);
+                globalRecords = [];
+                renderRecordsStack();
+            }
+        }
+
+        window.renderRecordsStack = function() {
+            const container = document.getElementById('recordsStack');
+            container.innerHTML = '';
+
+            const filtered = globalRecords.filter(r => currentFilter === 'ALL' || r.selected_mode === currentFilter);
+
+            const uniqueRecordsMap = new Map();
+            filtered.forEach(record => {
+                const uniqueKey = record.mrd_no || record.patient_name;
+                if (!uniqueRecordsMap.has(uniqueKey)) {
+                    uniqueRecordsMap.set(uniqueKey, record);
+                }
+            });
+
+            const uniqueFiltered = Array.from(uniqueRecordsMap.values());
+
+            if(uniqueFiltered.length === 0) {
+                container.innerHTML = '<div class="empty-state">No matching medical records found in the database.</div>';
+                return;
+            }
+
+            uniqueFiltered.forEach(record => {
+                let badgeClass = 'type-standard';
+                let typeLabel = 'Standard Prescription';
+                
+                // मॅन्युअल आहे की ऑटोमॅटिक ते तपासून बॅज ठरवणे
+                let sourceBadgeHTML = '';
+                if (record.hc_selections || record.vit_selections || record.fe_selections) {
+                    sourceBadgeHTML = '<span class="source-badge-manual">Manual</span>';
+                } else {
+                    sourceBadgeHTML = '<span class="source-badge-auto">Automatic</span>';
+                }
+
+                let metricsSummaryHtml = `
+                    <span>HC: <strong>${record.hc_val}</strong></span>
+                    <span>Vit D: <strong>${record.vit_d}</strong></span>
+                    <span>Fe: <strong>${record.fe_val}</strong></span>
+                `;
+
+                if(record.selected_mode === 'annual') { 
+                    badgeClass = 'type-annual'; 
+                    typeLabel = 'Annual Prescription'; 
+                    const displayShoulder = record.annual_shoulder || "-";
+                    const displayCustomVal = record.follow_up_date || "-";
+                    metricsSummaryHtml += `
+                        <span>Shoulder: <strong>${displayShoulder}</strong></span>
+                        <span>Follow-up: <strong>${displayCustomVal}</strong></span>
+                    `;
+                }
+                else if(record.selected_mode === 'dexa') { 
+                    badgeClass = 'type-dexa'; 
+                    typeLabel = 'DEXA Scan'; 
+                    const displayLS = record.dexa_ls !== undefined ? record.dexa_ls : (record.ls || "-");
+                    const displayHL = record.dexa_hl !== undefined ? record.dexa_hl : (record.hl || "-");
+                    metricsSummaryHtml += `
+                        <span>LS: <strong>${displayLS}</strong></span>
+                        <span>HL: <strong>${displayHL}</strong></span>
+                    `;
+                } else {
+                    metricsSummaryHtml += `<span>Particulars: <strong>Standard Template</strong></span>`;
+                }
+
+                const displayDate = record.date ? new Date(record.date).toLocaleString('en-US', {
+                    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                }) : "No Date";
+
+                let dropdownOptionsHtml = `<option value="" disabled selected></option>`;
+                dropdownOptionsHtml += `<option value="current">Current Version</option>`;
+                
+                if (record.history) {
+                    Object.keys(record.history).forEach(vKey => {
+                        const vData = record.history[vKey];
+                        const vDate = vData.date ? new Date(vData.date).toLocaleString('en-US', {
+                            month: 'short', day: 'numeric', year: '2-digit', hour: '2-digit', minute: '2-digit'
+                        }) : "Unknown Date";
+                        dropdownOptionsHtml += `<option value="${vKey}">${vDate}</option>`;
+                    });
+                }
+
+                const cardHtml = `
+                    <div class="record-card" data-type="${record.selected_mode}">
+                        <div class="record-meta-side">
+                            <div class="patient-header-line">
+                                <span class="patient-name">${record.patient_name}</span>
+                                <span class="mrd-badge">MRD: ${record.mrd_no && record.mrd_no !== '-' ? record.mrd_no : 'N/A'}</span>
+                                <span class="type-badge ${badgeClass}">${typeLabel}</span>
+                                ${sourceBadgeHTML}
+                            </div>
+                            <div class="lab-metrics-summary">
+                                ${metricsSummaryHtml}
+                            </div>
+                        </div>
+                        <div class="record-action-side">
+                            <span class="date-stamp">Last Active: ${displayDate}</span>
+                            
+                            <div class="action-icons-row">
+                                <button class="icon-action-btn view" data-tooltip="View Record" onclick="redirectToView('${record.id}')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                                
+                                <button class="icon-action-btn update" data-tooltip="Modify Stack" onclick="openUpdateModal('${record.id}')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </button>
+
+                                <button class="icon-action-btn delete" data-tooltip="Delete Record" onclick="deleteRecordFromServer('${record.id}')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+
+                                <div class="history-dropdown-wrapper" data-tooltip="View Timeline">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <select class="history-dropdown" onchange="handleHistoryRedirect('${record.id}', this)">
+                                        ${dropdownOptionsHtml}
+                                    </select>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        window.filterData = function(type, btnElement) {
+            currentFilter = type;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            renderRecordsStack();
+        }
+
+        window.redirectToView = function(recordId) {
+            window.location.href = `view.html?id=${recordId}`;
+        }
+
+        window.handleHistoryRedirect = function(recordId, selectElement) {
+            const selectedVal = selectElement.value;
+            if(!selectedVal) return;
+            
+            if(selectedVal === 'current') {
+                window.location.href = `view.html?id=${recordId}`;
+            } else {
+                window.location.href = `view.html?id=${recordId}&version=${selectedVal}`;
+            }
+            selectElement.value = ""; 
+        }
+
+        window.openUpdateModal = function(recordId) {
+            const record = globalRecords.find(r => r.id === recordId);
+            if(!record) return;
+
+            document.getElementById('edit-id').value = record.id;
+            document.getElementById('edit-name').value = record.patient_name;
+            document.getElementById('edit-hc').value = record.hc_val;
+            document.getElementById('edit-vit').value = record.vit_d;
+            document.getElementById('edit-fe').value = record.fe_val;
+            
+            const targetLabel = document.getElementById('dynamic-label');
+            const customInput = document.getElementById('edit-custom-val');
+            
+            const shoulderGroup = document.getElementById('shoulder-dropdown-group');
+            const dynamicGroup = document.getElementById('dynamic-modifier-group');
+            const dexaLsGroup = document.getElementById('dexa-ls-group');
+            const dexaHlGroup = document.getElementById('dexa-hl-group');
+
+            if(record.selected_mode === 'annual') {
+                shoulderGroup.style.display = 'flex';
+                dynamicGroup.style.display = 'flex';
+                dexaLsGroup.style.display = 'none';
+                dexaHlGroup.style.display = 'none';
+
+                targetLabel.textContent = "Annual Follow-up Date";
+                customInput.type = "date";
+                customInput.value = record.follow_up_date || "";
+                document.getElementById('edit-shoulder').value = record.annual_shoulder || "-";
+            } else if(record.selected_mode === 'dexa') {
+                shoulderGroup.style.display = 'none';
+                dynamicGroup.style.display = 'none';
+                dexaLsGroup.style.display = 'flex';
+                dexaHlGroup.style.display = 'flex';
+
+                document.getElementById('edit-dexa-ls').value = record.dexa_ls !== undefined ? record.dexa_ls : (record.ls || "");
+                document.getElementById('edit-dexa-hl').value = record.dexa_hl !== undefined ? record.dexa_hl : (record.hl || "");
+            } else {
+                shoulderGroup.style.display = 'flex';
+                dynamicGroup.style.display = 'flex';
+                dexaLsGroup.style.display = 'none';
+                dexaHlGroup.style.display = 'none';
+
+                targetLabel.textContent = "Custom Mode Notes";
+                customInput.type = "text";
+                customInput.value = "-";
+                document.getElementById('edit-shoulder').value = "-";
+            }
+            
+            document.getElementById('updateModal').style.display = 'flex';
+        }
+
+        window.closeUpdateModal = function() {
+            document.getElementById('updateModal').style.display = 'none';
+        }
+
+        window.saveUpdatedRecordChanges = async function() {
+            const id = document.getElementById('edit-id').value;
+            const record = globalRecords.find(r => r.id === id);
+            if(!record) return;
+
+            const btnSave = document.getElementById('btnSaveConfirm');
+            btnSave.innerText = "Syncing Cloud...";
+            btnSave.disabled = true;
+
+            const historySnapshot = {
+                patient_name: record.patient_name,
+                hc_val: record.hc_val,
+                vit_d: record.vit_d,
+                fe_val: record.fe_val,
+                date: record.date || new Date().toISOString(),
+                selected_mode: record.selected_mode
+            };
+            if(record.selected_mode === 'annual') {
+                historySnapshot.follow_up_date = record.follow_up_date || "";
+                historySnapshot.annual_shoulder = record.annual_shoulder || "";
+            } else if(record.selected_mode === 'dexa') {
+                historySnapshot.dexa_ls = record.dexa_ls !== undefined ? record.dexa_ls : "";
+                historySnapshot.dexa_hl = record.dexa_hl !== undefined ? record.dexa_hl : "";
+            }
+
+            const updatedData = {
+                ...record,
+                patient_name: document.getElementById('edit-name').value,
+                hc_val: document.getElementById('edit-hc').value,
+                vit_d: document.getElementById('edit-vit').value,
+                fe_val: document.getElementById('edit-fe').value,
+                date: new Date().toISOString() 
+            };
+
+            if(record.selected_mode === 'annual') {
+                updatedData.follow_up_date = document.getElementById('edit-custom-val').value;
+                updatedData.annual_shoulder = document.getElementById('edit-shoulder').value;
+            } else if(record.selected_mode === 'dexa') {
+                updatedData.dexa_ls = document.getElementById('edit-dexa-ls').value;
+                updatedData.dexa_hl = document.getElementById('edit-dexa-hl').value;
+            }
+
+            if(!updatedData.history) updatedData.history = {};
+            const internalHistoryId = "v_" + Date.now();
+            updatedData.history[internalHistoryId] = historySnapshot;
+
+            try {
+                const docRef = doc(db, "prescriptions", id);
+                await updateDoc(docRef, updatedData);
+
+                closeUpdateModal();
+                btnSave.innerText = "Commit Updates";
+                btnSave.disabled = false;
+                loadRecordsFromDatabase();
+            } catch (error) {
+                console.error("Update fail:", error);
+                alert("Could not sync cloud data update profile.");
+                btnSave.innerText = "Commit Updates";
+                btnSave.disabled = false;
+            }
+        }
+
+        window.deleteRecordFromServer = async function(recordId) {
+            if (!confirm("Are you sure you want to permanently delete this medical record?")) return;
+
+            try {
+                await deleteDoc(doc(db, "prescriptions", recordId));
+                loadRecordsFromDatabase();
+            } catch (error) {
+                console.error("Deletion failure:", error);
+                alert("Could not delete record from cloud database.");
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediRx+ - Medical Advisor Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e2efff 50%, #edf4fc 100%);
+            min-height: 100vh;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 4rem;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #0284c7;
+            letter-spacing: -0.5px;
+        }
+
+        .brand span {
+            color: #0f172a;
+            font-weight: 400;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #475569;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: #0284c7;
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after, .nav-links a.active::after {
+            width: 100%;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #0284c7;
+        }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white !important;
+            padding: 8px 22px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(217, 119, 6, 0.25);
+            transition: all 0.3s ease !important;
+        }
+
+        .btn-logout::after { display: none; }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(217, 119, 6, 0.4);
+        }
+
+        /* Main Workspace Container */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 4rem;
+        }
+
+        /* Hero Section with Creative Gradient Border */
+        .hero-section {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: 36px;
+            padding: 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            box-shadow: 0 25px 50px rgba(15, 23, 42, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50px; right: -50px;
+            width: 250px; height: 250px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+        }
+
+        .hero-text {
+            max-width: 55%;
+            z-index: 1;
+        }
+
+        .hero-text h1 {
+            font-size: 2.8rem;
+            font-style: italic;
+            color: #0f172a;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0 12px;
+        }
+
+        .hero-text h1 span.fade-left-word {
+            display: inline-block;
+            opacity: 0;
+            transform: translateX(-30px) translateY(10px);
+            animation: slideInFromLeft 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .hero-text h1 span:nth-child(1) { animation-delay: 0.1s; }
+        .hero-text h1 span:nth-child(2) { animation-delay: 0.22s; }
+        .hero-text h1 span:nth-child(3) { animation-delay: 0.34s; }
+        .hero-text h1 span:nth-child(4) { animation-delay: 0.46s; }
+        .hero-text h1 span:nth-child(5) { animation-delay: 0.58s; }
+
+        @keyframes slideInFromLeft {
+            to {
+                opacity: 1;
+                transform: translateX(0) translateY(0);
+            }
+        }
+
+        .hero-text p.slogan {
+            font-size: 1.3rem;
+            color: #0284c7;
+            font-weight: 600;
+            font-style: italic;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-generate {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #38bdf8, #0284c7);
+            color: white;
+            padding: 16px 38px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-decoration: none;
+            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.3);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            margin-top: 1.5rem;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-generate:hover {
+            box-shadow: 0 15px 35px rgba(56, 189, 248, 0.5);
+            transform: translateY(-3px);
+        }
+
+        .btn-generate span {
+            transition: transform 0.3s ease;
+        }
+
+        .btn-generate:hover span {
+            transform: translateX(6px);
+        }
+
+        .hero-graphic {
+            width: 35%;
+            display: flex;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        .medical-art {
+            width: 260px;
+            height: 260px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.3) 0%, transparent 75%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .medical-art::before {
+            content: '♥';
+            font-size: 9rem;
+            color: #0284c7;
+            opacity: 0.85;
+            animation: pulse 2.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(2, 132, 199, 0.3)); }
+            50% { transform: scale(1.12); filter: drop-shadow(0 0 35px rgba(56, 189, 248, 0.8)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(2, 132, 199, 0.3)); }
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.75rem;
+            margin-bottom: 3rem;
+        }
+
+        .feature-card {
+            background: #ffffff;
+            text-align: center;
+            padding: 3.5rem 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.03);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            animation: blobFlow 7s ease-in-out infinite alternate;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .features-grid div:nth-child(1) { animation-delay: 0s; }
+        .features-grid div:nth-child(2) { animation-delay: 1.5s; }
+        .features-grid div:nth-child(3) { animation-delay: 3s; }
+        .features-grid div:nth-child(4) { animation-delay: 4.5s; }
+
+        .card-icon {
+            font-size: 2.8rem;
+            margin-bottom: 0.85rem;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover .card-icon {
+            transform: scale(1.15) rotate(5deg);
+        }
+
+        .feature-card h3 {
+            font-size: 1.15rem;
+            color: #0f172a;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        @keyframes blobFlow {
+            0% { border-radius: 95px 105px 95px 105px / 105px 95px 105px 95px; }
+            33% { border-radius: 120px 80px 115px 85px / 80px 115px 85px 125px; border-color: rgba(56, 189, 248, 0.4); }
+            66% { border-radius: 85px 115px 80px 120px / 115px 85px 120px 80px; border-color: rgba(2, 132, 199, 0.3); }
+            100% { border-radius: 105px 95px 105px 95px / 95px 105px 95px 105px; }
+        }
+
+        .feature-card:hover {
+            border-color: #38bdf8;
+            background: linear-gradient(180deg, #ffffff 0%, #f0f7ff 100%);
+            box-shadow: 0 20px 35px rgba(56, 189, 248, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .feature-card:hover h3 {
+            color: #0284c7;
+        }
+
+        /* About Section */
+        .about-section {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #f8fafc;
+            border-radius: 36px;
+            padding: 4rem;
+            position: relative;
+            overflow: hidden;
+            font-style: italic;
+            margin-bottom: 12px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+
+        .about-section h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #38bdf8;
+            font-style: normal;
+        }
+
+        .about-section p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #cbd5e1;
+            max-width: 80%;
+        }
+
+        .about-quote {
+            margin-top: 2rem;
+            padding: 1.2rem 1.8rem;
+            font-style: italic;
+            font-weight: 700;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            border-left: 4px solid #38bdf8;
+            display: inline-block;
+            background-image: linear-gradient(120deg, #cbd5e1 0%, #cbd5e1 35%, #38bdf8 45%, #67e8f9 55%, #cbd5e1 65%, #cbd5e1 100%);
+            background-size: 200% center;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: textSparkleGlow 4s linear infinite;
+        }
+
+        @keyframes textSparkleGlow {
+            0% { background-position: 200% center; }
+            100% { background-position: -200% center; }
+        }
+
+        /* --- CREATIVE PREMIUM POPUP MODAL --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-box {
+            background: #ffffff;
+            border-radius: 32px;
+            padding: 3rem 2.5rem;
+            width: 90%;
+            max-width: 480px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 1.8rem;
+            text-align: center;
+            position: relative;
+            transform: translateY(20px);
+            animation: slideUpModal 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUpModal {
+            to { transform: translateY(0); }
+        }
+
+        .modal-badge {
+            background: #e0f2fe;
+            color: #0284c7;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 6px 14px;
+            border-radius: 50px;
+            align-self: center;
+        }
+
+        .modal-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+        }
+
+        .modal-options-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .modal-option-btn {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            padding: 18px 22px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            text-decoration: none;
+            text-align: left;
+        }
+
+        .modal-option-btn .icon-box {
+            width: 45px; height: 45px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .modal-option-btn.auto {
+            border-color: #bae6fd;
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        }
+
+        .modal-option-btn.auto .icon-box {
+            background: #0284c7;
+            color: white;
+        }
+
+        .modal-option-btn.auto:hover {
+            border-color: #0284c7;
+            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .modal-option-btn.manual {
+            border-color: #f5d0fe;
+            background: linear-gradient(135deg, #fdf4ff, #fae8ff);
+        }
+
+        .modal-option-btn.manual .icon-box {
+            background: #d946ef;
+            color: white;
+        }
+
+        .modal-option-btn.manual:hover {
+            border-color: #d946ef;
+            box-shadow: 0 10px 25px rgba(217, 70, 239, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .modal-option-btn:hover .icon-box {
+            transform: scale(1.1);
+        }
+
+        .btn-modal-cancel {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+
+        .btn-modal-cancel:hover {
+            color: #0f172a;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="brand">MediRx<span>+</span></div>
+        <ul class="nav-links">
+            <li><a href="home.html" class="active">Dashboard</a></li>
+            <li><a href="generate.html">Auto</a></li>
+            <li><a href="manual.html">Manual</a></li>
+            <li><a href="list.html">Records</a></li>
+            <li><a href="index.html" class="btn-logout">Logout</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-container">
+        
+        <section class="hero-section" id="dashboard">
+            <div class="hero-text">
+                <h1>
+                    <span class="fade-left-word">Simplifying</span>
+                    <span class="fade-left-word">Clinical</span>
+                    <span class="fade-left-word">Workflows</span>
+                    <span class="fade-left-word">with</span>
+                    <span class="fade-left-word">Smart Data!</span>
+                </h1>
+                <p class="slogan">Where exact metrics lead to better treatment.</p>
+                <p style="color: #64748b; line-height: 1.6; margin-bottom: 1rem;">Welcome back to your workspace. Quickly view patient files, track lab values, and format beautiful, print-ready documents in a single click.</p>
+                
+                <!-- Trigger Creative Modal -->
+                <button class="btn-generate" onclick="openGenerateModal()">
+                    Lets Start Generate!! <span>➜</span>
+                </button>
+            </div>
+            <div class="hero-graphic">
+                <div class="medical-art"></div>
+            </div>
+        </section>
+
+        <section class="features-grid">
+            
+            <div class="feature-card" onclick="window.location.href='generate.html'">
+                <div class="card-icon">🧬</div>
+                <h3>Auto Prescription</h3>
+            </div>
+            
+            <div class="feature-card" onclick="window.location.href='manual.html'">
+                <div class="card-icon">✍️</div>
+                <h3>Manual Prescription</h3>
+            </div>
+            
+            <div class="feature-card" onclick="window.location.href='list.html'">
+                <div class="card-icon">🧠</div>
+                <h3>History / Records</h3>
+            </div>
+            
+            <div class="feature-card" onclick="window.location.href='adm.html'">
+                <div class="card-icon">📝</div>
+                <h3>Admission Note</h3>
+            </div>
+
+        </section>
+
+        <section class="about-section" id="records">
+            <h2>About Our Ecosystem</h2>
+            <p>Built for modern healthcare, MediRx+ bridges the gap between deep laboratory diagnostics and daily clinic workflows. The app reads critical physiological metrics and automatically builds accurate, structured prescription models in seconds...</p>
+            <div class="about-quote">
+                We handle the formatting and calculations, so you can focus completely on what matters most: your patient's healing journey.
+            </div>
+        </section>
+    </main>
+
+    <!-- Creative Selection Popup Modal -->
+    <div class="modal-overlay" id="generateModal">
+        <div class="modal-box">
+            <div class="modal-badge">New Session</div>
+            <div class="modal-title">Choose Formulation Mode</div>
+            
+            <div class="modal-options-stack">
+                <button class="modal-option-btn auto" onclick="window.location.href='generate.html'">
+                    <div class="icon-box">🧬</div>
+                    <div style="flex: 1; text-align: left;">
+                        <div style="font-size: 1.05rem; color: #0369a1;">Automated (Auto)</div>
+                        <div style="font-size: 0.8rem; color: #64748b; font-weight: 500; margin-top: 2px;">Calculate based on lab metric values</div>
+                    </div>
+                </button>
+
+                <button class="modal-option-btn manual" onclick="window.location.href='manual.html'">
+                    <div class="icon-box">✍️</div>
+                    <div style="flex: 1; text-align: left;">
+                        <div style="font-size: 1.05rem; color: #a21caf;">Manual Prescription</div>
+                        <div style="font-size: 0.8rem; color: #64748b; font-weight: 500; margin-top: 2px;">Custom selection via smart modals</div>
+                    </div>
+                </button>
+            </div>
+
+            <button class="btn-modal-cancel" onclick="closeGenerateModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        function openGenerateModal() {
+            document.getElementById('generateModal').style.display = 'flex';
+        }
+
+        function closeGenerateModal() {
+            document.getElementById('generateModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside the box
+        window.onclick = function(event) {
+            const modal = document.getElementById('generateModal');
+            if (event.target == modal) {
+                closeGenerateModal();
+            }
+        }
+    </script>
+</body>
+</html>

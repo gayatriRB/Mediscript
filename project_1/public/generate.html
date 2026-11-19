@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediRx - Generate Prescription</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e2efff 50%, #edf4fc 100%);
+            min-height: 100vh;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        /* Consistent Premium Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 4rem;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #0284c7;
+            letter-spacing: -0.5px;
+        }
+
+        .brand span {
+            color: #0f172a;
+            font-weight: 400;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #475569;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #0284c7;
+        }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white !important;
+            padding: 8px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
+            transition: transform 0.2s ease !important;
+        }
+
+        /* Workspace Form Wrapper */
+        .main-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .portal-heading {
+            font-size: 2rem;
+            color: #0f172a;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        /* Master Form Framework */
+        .form-card {
+            background: rgba(255, 255, 255, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 32px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Row Form Layout Construction */
+        .form-row {
+            display: flex;
+            gap: 1.5rem;
+            width: 100%;
+        }
+
+        .form-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        label .required {
+            color: #ef4444;
+            margin-left: 3px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 1rem;
+            color: #0f172a;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+            background: #ffffff;
+        }
+
+        /* Secondary Selection Mode Buttons Row */
+        .mode-buttons-row {
+            display: flex;
+            gap: 1rem;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .btn-mode {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #cbd5e1;
+            color: #475569;
+            padding: 14px;
+            border-radius: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-size: 0.95rem;
+        }
+
+        .btn-mode:hover {
+            background: #ffffff;
+            border-color: #0284c7;
+            color: #0284c7;
+            transform: translateY(-1px);
+        }
+
+        .btn-mode.active {
+            background: #e0f2fe;
+            border-color: #0284c7;
+            color: #0369a1;
+            box-shadow: inset 0 2px 4px rgba(2, 132, 199, 0.06);
+        }
+
+        /* Sub-forms container logic */
+        .sub-form-container {
+            display: none;
+            background: rgba(248, 250, 252, 0.7);
+            border: 1px dashed #cbd5e1;
+            border-radius: 20px;
+            padding: 2rem;
+            animation: slideDown 0.35s ease-out forwards;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Final Action Submission Button */
+        .btn-submit-container {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-main-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #38bdf8, #0284c7);
+            color: white;
+            padding: 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(2, 132, 199, 0.25);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-main-submit:hover {
+            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.45);
+            transform: translateY(-2px);
+        }
+
+        /* Status notification design for autofill alert */
+        .autofill-alert {
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 10px 16px;
+            border-radius: 12px;
+            margin-bottom: 5px;
+            display: none;
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="brand">MediRx<span>+</span></div>
+        <ul class="nav-links">
+            <li><a href="home.html">Dashboard</a></li>
+            <li><a href="generate.html" class="active">Auto</a></li>
+            <li><a href="manual.html">Manual</a></li>
+            <li><a href="list.html">Records</a></li>
+            <li><a href="index.html" class="btn-logout">Logout</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-container">
+        <h1 class="portal-heading">Patient Medical Formulation (Automated)</h1>
+
+        <div id="autofillStatus" class="autofill-alert"></div>
+
+        <form id="prescriptionForm" onsubmit="saveToFirebase(event)" class="form-card">
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <div style="display: none;"><input type="date" id="system_date"></div> 
+                    <label for="mrd_no">MRD No (Optional)</label>
+                    <input type="text" id="mrd_no" name="mrd_no" placeholder="Enter registration code if any..." onblur="checkAndAutofillMRD()">
+                </div>
+                <div class="form-group">
+                    <div style="display: none;"><input type="text" id="selected_mode" value="none"></div>
+                    <label for="patient_name">Patient Name<span class="required">*</span></label>
+                    <input type="text" id="patient_name" name="patient_name" placeholder="Enter patient full name..." required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="hc_val">HC (Homocysteine)</label>
+                    <input type="text" id="hc_val" name="hc_val" placeholder="Value...">
+                </div>
+                <div class="form-group">
+                    <div style="display: none;"><input type="text" id="firebase_id"></div>
+                    <label for="vit_d">Vit D</label>
+                    <input type="text" id="vit_d" name="vit_d" placeholder="Value...">
+                </div>
+                <div class="form-group">
+                    <label for="fe_val">Fe (Ferritin)</label>
+                    <input type="text" id="fe_val" name="fe_val" placeholder="Value...">
+                </div>
+            </div>
+
+            <div class="mode-buttons-row">
+                <button type="button" class="btn-mode" id="btnAnnual" onclick="toggleSubForm('annual')">Annual Prescription</button>
+                <button type="button" class="btn-mode" id="btnDexa" onclick="toggleSubForm('dexa')">DEXA Scan</button>
+            </div>
+
+            <div class="sub-form-container" id="formAnnual">
+                <h3 style="margin-bottom: 1rem; color: #0369a1; font-size: 1.1rem;">Annual Prescription Particulars</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="annual_shoulder">Shoulder Select</label>
+                        <select id="annual_shoulder" name="annual_shoulder">
+                            <option value="" disabled selected>Select side option...</option>
+                            <option value="LEFT">i) LEFT</option>
+                            <option value="RIGHT">ii) RIGHT</option>
+                            <option value="BILATERAL">iii) BILATERAL</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="follow_up_date">Annual Follow-up Date</label>
+                        <input type="date" id="follow_up_date" name="follow_up_date">
+                    </div>
+                </div>
+            </div>
+
+            <div class="sub-form-container" id="formDexa">
+                <h3 style="margin-bottom: 1rem; color: #0369a1; font-size: 1.1rem;">DEXA Scan Metrics</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="lateral_spine">Lateral Spine</label>
+                        <input type="number" step="any" id="lateral_spine" name="lateral_spine" placeholder="Enter positive or negative float...">
+                    </div>
+                    <div class="form-group">
+                        <label for="hip_lumbar_spine">Hip and Lumbar Spine</label>
+                        <input type="number" step="any" id="hip_lumbar_spine" name="hip_lumbar_spine" placeholder="Enter positive or negative float...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-submit-container">
+                <button type="submit" id="btnSubmit" class="btn-main-submit">Generate Prescription</button>
+            </div>
+
+        </form>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDshtIK7BVa5gRVXL1TJB3yIlXWhbiNUsY",
+            authDomain: "mediscript-16c4b.firebaseapp.com",
+            projectId: "mediscript-16c4b",
+            storageBucket: "mediscript-16c4b.firebasestorage.app",
+            messagingSenderId: "452512782717",
+            appId: "1:452512782717:web:ca7c3bab69678efe019414"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        document.getElementById('system_date').value = new Date().toISOString().split('T')[0];
+
+        window.toggleSubForm = function(targetMode) {
+            const button = targetMode === 'annual' ? document.getElementById('btnAnnual') : document.getElementById('btnDexa');
+            const container = targetMode === 'annual' ? document.getElementById('formAnnual') : document.getElementById('formDexa');
+
+            if (button.classList.contains('active')) {
+                button.classList.remove('active');
+                container.style.display = 'none';
+            } else {
+                button.classList.add('active');
+                container.style.display = 'block';
+            }
+
+            const annualActive = document.getElementById('btnAnnual').classList.contains('active');
+            const dexaActive = document.getElementById('btnDexa').classList.contains('active');
+
+            let unifiedMode = 'none';
+            if (annualActive && dexaActive) { unifiedMode = 'annual, dexa'; } 
+            else if (annualActive) { unifiedMode = 'annual'; } 
+            else if (dexaActive) { unifiedMode = 'dexa'; }
+
+            document.getElementById('selected_mode').value = unifiedMode;
+        }
+
+        window.checkAndAutofillMRD = async function() {
+            const mrdInput = document.getElementById('mrd_no').value.trim();
+            const statusBadge = document.getElementById('autofillStatus');
+            
+            if(!mrdInput) {
+                statusBadge.style.display = "none";
+                return;
+            }
+
+            try {
+                const q = query(collection(db, "prescriptions"), where("mrd_no", "==", mrdInput));
+                const querySnapshot = await getDocs(q);
+
+                if(!querySnapshot.empty) {
+                    let matches = [];
+                    querySnapshot.forEach((doc) => {
+                        matches.push({ id: doc.id, ...doc.data() });
+                    });
+
+                    matches.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    const latestRecord = matches[0];
+
+                    document.getElementById('patient_name').value = latestRecord.patient_name || "";
+                    document.getElementById('hc_val').value = latestRecord.hc_val && latestRecord.hc_val !== "-" ? latestRecord.hc_val : "";
+                    document.getElementById('vit_d').value = latestRecord.vit_d && latestRecord.vit_d !== "-" ? latestRecord.vit_d : "";
+                    document.getElementById('fe_val').value = latestRecord.fe_val && latestRecord.fe_val !== "-" ? latestRecord.fe_val : "";
+
+                    document.getElementById('btnAnnual').classList.remove('active');
+                    document.getElementById('formAnnual').style.display = 'none';
+                    document.getElementById('btnDexa').classList.remove('active');
+                    document.getElementById('formDexa').style.display = 'none';
+                    document.getElementById('selected_mode').value = 'none';
+
+                    const prevModeStr = String(latestRecord.selected_mode || latestRecord.type || 'none').toLowerCase();
+                    
+                    if (prevModeStr !== 'none') {
+                        if (prevModeStr.includes('annual')) {
+                            toggleSubForm('annual');
+                            document.getElementById('annual_shoulder').value = latestRecord.annual_shoulder || "";
+                            document.getElementById('follow_up_date').value = latestRecord.follow_up_date && latestRecord.follow_up_date !== "-" ? latestRecord.follow_up_date : "";
+                        }
+                        if (prevModeStr.includes('dexa')) {
+                            toggleSubForm('dexa');
+                            document.getElementById('lateral_spine').value = latestRecord.lateral_spine || latestRecord.ls || "";
+                            document.getElementById('hip_lumbar_spine').value = latestRecord.hip_lumbar_spine || latestRecord.hl || "";
+                        }
+                    }
+
+                    statusBadge.style.display = "block";
+                    statusBadge.innerText = `🔄 Patient History Found! Loaded previous data. Saving will create a NEW separate record for today.`;
+                    setTimeout(() => { statusBadge.style.display = "none"; }, 8000);
+                } else {
+                    statusBadge.style.display = "none";
+                }
+            } catch (err) {
+                console.error("History lookup error:", err);
+            }
+        }
+
+        window.saveToFirebase = async function(event) {
+            event.preventDefault();
+            
+            document.getElementById('system_date').value = new Date().toISOString().split('T')[0];
+
+            const btnSubmit = document.getElementById('btnSubmit');
+            btnSubmit.innerText = "Processing & Saving...";
+            btnSubmit.disabled = true;
+
+            const modeValue = document.getElementById('selected_mode').value;
+
+            const formData = {
+                mrd_no: document.getElementById('mrd_no').value || "-",
+                patient_name: document.getElementById('patient_name').value,
+                date: document.getElementById('system_date').value,
+                hc_val: document.getElementById('hc_val').value || "-",
+                vit_d: document.getElementById('vit_d').value || "-",
+                fe_val: document.getElementById('fe_val').value || "-",
+                selected_mode: modeValue,
+                type: modeValue.toUpperCase(), 
+                annual_shoulder: modeValue.includes('annual') ? document.getElementById('annual_shoulder').value || "-" : "-",
+                follow_up_date: modeValue.includes('annual') ? document.getElementById('follow_up_date').value || "-" : "-",
+                lateral_spine: modeValue.includes('dexa') ? document.getElementById('lateral_spine').value || "-" : "-",
+                hip_lumbar_spine: modeValue.includes('dexa') ? document.getElementById('hip_lumbar_spine').value || "-" : "-",
+                shoulder: modeValue.includes('annual') ? (document.getElementById('annual_shoulder').value || "-") : "-",
+                custom_val: modeValue.includes('annual') ? (document.getElementById('follow_up_date').value || "-") : "-",
+                ls: modeValue.includes('dexa') ? (document.getElementById('lateral_spine').value || "-") : "-",
+                hl: modeValue.includes('dexa') ? (document.getElementById('hip_lumbar_spine').value || "-") : "-"
+            };
+
+            try {
+                const docRef = await addDoc(collection(db, "prescriptions"), formData);
+
+                const localArray = JSON.parse(localStorage.getItem('mediRxRecords')) || [];
+                localArray.push(formData);
+                localStorage.setItem('mediRxRecords', JSON.stringify(localArray));
+
+                window.location.href = `view.html?id=${docRef.id}`;
+            } catch (error) {
+                console.error("Firebase Sync Error:", error);
+                alert("Cloud storage connection error. Please verify network access.");
+                btnSubmit.innerText = "Generate Prescription";
+                btnSubmit.disabled = false;
+            }
+        }
+    </script>   
+</body>
+</html>

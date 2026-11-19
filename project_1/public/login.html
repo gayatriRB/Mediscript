@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediRx - Clinical Cloud Login</title>
+    <style>
+        :root {
+            --primary-color: #0f766e; /* Deep Teal */
+            --primary-hover: #115e59;
+            --background-color: #f0fdfa; /* Light Teal Tint */
+            --card-background: #ffffff;
+            --text-color: #1e293b;
+            --error-color: #e11d48;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .login-container {
+            background: var(--card-background);
+            padding: 40px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(15, 118, 110, 0.08);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            border: 1px solid rgba(15, 118, 110, 0.1);
+        }
+
+        .logo-area {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #475569;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+            color: var(--text-color);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .error-message {
+            color: var(--error-color);
+            margin-top: 16px;
+            font-size: 13px;
+            min-height: 18px;
+            font-weight: 500;
+        }
+
+        .footer-text {
+            margin-top: 32px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <div class="logo-area">MediRx</div>
+    <div class="subtitle">Clinical Cloud Management System</div>
+    
+    <div class="input-group">
+        <label for="email">Authorized Email Address</label>
+        <input type="email" id="email" placeholder="doctor@medirx.com" required>
+    </div>
+    
+    <div class="input-group">
+        <label for="password">Security Password</label>
+        <input type="password" id="password" placeholder="••••••••" required>
+    </div>
+    
+    <button onclick="loginUser()">Sign In securely</button>
+    
+    <div class="error-message" id="errorMessage"></div>
+    
+    <div class="footer-text">Secure End-to-End Encrypted Cloud Network</div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+  // तुमचा MediScript चा खरा firebaseConfig इथे टाका
+  const firebaseConfig = {
+    apiKey: "तुमची-API-KEY",
+    authDomain: "mediscript-XXX.firebaseapp.com",
+    projectId: "mediscript-XXX",
+    storageBucket: "mediscript-XXX.firebasestorage.app",
+    messagingSenderId: "123456",
+    appId: "1:123456:web:abcd"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  window.loginUser = function() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const errorDiv = document.getElementById('errorMessage');
+    errorDiv.innerText = "";
+
+    if(!email || !password) {
+        errorDiv.innerText = "Please fill in all security credentials.";
+        return;
+    }
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        // यशस्वी लॉगिननंतर
+        window.location.href = "adm.html"; 
+      })
+      .catch((error) => {
+        errorDiv.innerText = "Invalid email or password. Access denied.";
+        console.error(error.message);
+      });
+  }
+</script>
+
+</body>
+</html>

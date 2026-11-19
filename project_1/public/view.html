@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediRx - View & Print Prescription</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e2efff 50%, #edf4fc 100%);
+            min-height: 100vh;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 4rem;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #0284c7;
+            letter-spacing: -0.5px;
+        }
+
+        .brand span { color: #0f172a; font-weight: 400; }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #475569;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active { color: #0284c7; }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white !important;
+            padding: 8px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
+        }
+
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .action-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .portal-heading { font-size: 1.8rem; color: #0f172a; font-weight: 800; }
+
+        .btn-print {
+            background: linear-gradient(135deg, #38bdf8, #0284c7);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(2, 132, 199, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .btn-print:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(2, 132, 199, 0.25);
+        }
+
+        /* Preview Container Layout simulating A5 on Desktop */
+        .preview-wrapper {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 2rem;
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.03);
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Printable Prescription Card styling - Fixed A5 Ratio for display */
+        .prescription-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 148mm; 
+            height: 210mm; 
+            overflow: hidden; 
+            padding: 0.3in;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            position: relative;
+            color: #000000;
+            font-family: 'Georgia', serif;
+            line-height: 1.4;
+        }
+
+        /* LETTERHEAD BLANK SPACER */
+        .letterhead-spacer {
+            height: 90px; 
+            width: 100%;
+            display: block;
+        }
+
+        .top-date-right-container {
+            display: flex;
+            justify-content: flex-end;
+            font-size: 16px;
+            margin-bottom: 25px; 
+        }
+
+        .patient-demographics-row {
+            text-align: center;
+            font-size: 16px;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            margin-right: 7px;   
+            margin-left: 7px;   
+        }
+
+        .patient-name-container {
+            display: inline-block;
+            max-width: 250px;
+            white-space: normal;
+            vertical-align: top;
+            text-align: left;
+            margin-right: 32px; 
+        }
+
+        .mrd-container {
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .lab-metrics-inline-row {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            font-size: 17px;
+            font-weight: bold;
+            margin-bottom: 34px;
+            margin-right: 23px;
+            margin-left: 23px;
+        }
+
+        .medication-print-container {
+            margin-top: 5px;
+            margin-bottom: 5px;
+            margin-right: 23px;
+            margin-left: 23px;
+        }
+
+        .med-item-block {
+            margin-bottom: 12px;
+            font-size: 16px;
+            line-height: 1.4;
+        }
+
+        .med-main-line {
+            display: block;
+        }
+
+        .med-followup-line {
+            display: block;
+            margin-top: 4px;
+            padding-left: 17px; 
+        }
+
+        .conditional-bottom-text {
+            margin-top: 5px;
+            font-size: 15px;
+            line-height: 1.4;
+            padding-top: 5px;
+            margin-right: 23px;
+            margin-left: 23px;
+            font-weight: bold;
+        }
+
+        .loading-state {
+            text-align: center;
+            font-size: 1.1rem;
+            font-style: italic;
+            color: #64748b;
+            padding: 4rem 0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* PRINT CONFIGURATION - TARGETING A5 PAPERS PERFECTLY */
+        @media print {
+            @page {
+                size: A5 portrait;
+                margin: 0;
+            }
+            
+            html, body {
+                width: 148mm;
+                height: 210mm;
+                background: #ffffff !important;
+                color: #000000 !important;
+                overflow: hidden;
+            }
+
+            body {
+                padding: 0 !important;
+                margin: 0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .navbar, .action-header {
+                display: none !important;
+            }
+
+            .main-container {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+            }
+
+            .preview-wrapper {
+                padding: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
+                display: block !important;
+            }
+
+            .prescription-card {
+                width: 148mm !important;
+                height: 210mm !important;
+                max-width: 148mm !important;
+                max-height: 210mm !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                padding: 0.3in !important;
+                background: #ffffff !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+            }
+
+            .letterhead-spacer {
+                height: 90px; 
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="brand">MediRx<span>+</span></div>
+        <ul class="nav-links">
+            <li><a href="home.html">Dashboard</a></li>
+            <li><a href="generate.html">Generate Prescription</a></li>
+            <li><a href="manual.html">Manual Prescription</a></li>
+            <li><a href="list.html">Records or History</a></li>
+            <li><a href="index.html" class="btn-logout">Logout</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-container">
+        <div class="action-header">
+            <h1 class="portal-heading">Prescription Live Document</h1>
+            <button class="btn-print" onclick="window.print()">Print A5 Prescription</button>
+        </div>
+
+        <div class="preview-wrapper">
+            <div class="prescription-card" id="printArea">
+                <div class="loading-state" id="loadingState">Compiling clinical data structure from cloud...</div>
+                
+                <div id="prescriptionContent" style="display: none;">
+                    
+                    <div class="letterhead-spacer"></div>
+                    
+                    <div class="top-date-right-container">
+                        <div>Date: <span id="outDate">--/--/----</span></div>
+                    </div>
+
+                    <div class="patient-demographics-row" id="patientRow">
+                        <div class="patient-name-container">PATIENT NAME: <span id="outPatientName">--</span></div>
+                        <div class="mrd-container">MRD NO: <span id="outMrdNo">--</span></div>
+                    </div>
+
+                    <div class="lab-metrics-inline-row" id="labRow">
+                        <div>HC: <span id="outHc">--</span></div>
+                        <div>Vit D: <span id="outVit">--</span></div>
+                        <div>Fe: <span id="outFe">--</span></div>
+                        <div id="wrapperLsInline" style="display: none;">LS: <span id="outLsInline">--</span></div>
+                        <div id="wrapperHlInline" style="display: none;">HL: <span id="outHlInline">--</span></div>
+                    </div>
+
+                    <div class="medication-print-container" id="medicationPrintContainer">
+                        <p>Loading real-time medical prescription...</p>
+                    </div>
+
+                    <div id="outConditionalBlock" class="conditional-bottom-text" style="display: none;"></div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDshtIK7BVa5gRVXL1TJB3yIlXWhbiNUsY",
+            authDomain: "mediscript-16c4b.firebaseapp.com",
+            projectId: "mediscript-16c4b",
+            storageBucket: "mediscript-16c4b.firebasestorage.app",
+            messagingSenderId: "452512782717",
+            appId: "1:452512782717:web:ca7c3bab69678efe019414"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        function autoAdjustFontLayout() {
+            const container = document.getElementById('printArea');
+            const patientEl = document.getElementById('patientRow');
+            const labEl = document.getElementById('labRow');
+            const medContainer = document.getElementById('medicationPrintContainer');
+            const footerEl = document.getElementById('outConditionalBlock');
+            
+            let medSize = 16;
+            let patientSize = 19;
+            let labSize = 20;
+            let footerSize = 15;
+
+            patientEl.style.fontSize = patientSize + "px";
+            labEl.style.fontSize = labSize + "px";
+            footerEl.style.fontSize = footerSize + "px";
+            const initialBlocks = medContainer.getElementsByClassName('med-item-block');
+            for (let block of initialBlocks) {
+                block.style.fontSize = medSize + "px";
+            }
+
+            while (container.scrollHeight > container.clientHeight && medSize > 9) {
+                medSize -= 0.5;
+                patientSize -= 0.4;
+                labSize -= 0.4;
+                footerSize -= 0.5;
+
+                if (patientSize <= medSize + 1) patientSize = medSize + 2;
+                if (labSize <= medSize + 1) labSize = medSize + 2;
+
+                patientEl.style.fontSize = patientSize + "px";
+                labEl.style.fontSize = labSize + "px";
+                footerEl.style.fontSize = footerSize + "px";
+
+                footerEl.style.marginTop = Math.max(2, medSize - 10) + "px";
+                footerEl.style.paddingTop = Math.max(2, medSize - 10) + "px";
+
+                const medBlocks = medContainer.getElementsByClassName('med-item-block');
+                for (let block of medBlocks) {
+                    block.style.fontSize = medSize + "px";
+                    block.style.marginBottom = Math.max(4, medSize - 6) + "px";
+                }
+            }
+        }
+
+        async function fetchPrescriptionData(id, version) {
+            try {
+                const docRef = doc(db, "prescriptions", id);
+                const docSnap = await getDoc(docRef);
+
+                if (!docSnap.exists()) {
+                    document.getElementById('loadingState').textContent = "The requested medical record index does not exist.";
+                    return;
+                }
+
+                let data = docSnap.data();
+                let activeRx = data;
+                
+                if (version && data.history && data.history[version]) {
+                    activeRx = data.history[version];
+                }
+
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('prescriptionContent').style.display = 'block';
+
+                const now = new Date(activeRx.date || activeRx.timestamp || Date.now());
+                const dd = String(now.getDate()).padStart(2, '0');
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const yyyy = now.getFullYear();
+                const standardDate = `${dd}/${mm}/${yyyy}`;
+
+                const cleanValue = (val) => {
+                    if (val === undefined || val === null || val === "" || val === "-") return "--";
+                    return String(val)
+                        .replace(/g\/dL/gi, '')
+                        .replace(/ng\/mL/gi, '')
+                        .replace(/µmol\/L/gi, '')
+                        .replace(/μmol\/L/gi, '')
+                        .trim();
+                };
+
+                document.getElementById('outDate').textContent = standardDate;
+                document.getElementById('outPatientName').textContent = activeRx.patient_name || activeRx.patientName || "--";
+                document.getElementById('outMrdNo').textContent = cleanValue(activeRx.mrd_no || data.mrd_no);
+
+                document.getElementById('outHc').textContent = cleanValue(activeRx.hc_val || activeRx.hc);
+                document.getElementById('outFe').textContent = cleanValue(activeRx.fe_val || activeRx.fe);
+                document.getElementById('outVit').textContent = cleanValue(activeRx.vit_d || activeRx.vitD || activeRx.vit_d_val);
+
+                const wrapperLsInline = document.getElementById('wrapperLsInline');
+                const wrapperHlInline = document.getElementById('wrapperHlInline');
+                
+                const currentMode = String(activeRx.selected_mode || activeRx.mode || activeRx.type || '').toUpperCase();
+                const shoulderValue = activeRx.annual_shoulder || activeRx.dexa_shoulder || activeRx.shoulder || 'Left';
+
+                let rawLs = activeRx.dexa_ls !== undefined && activeRx.dexa_ls !== null && activeRx.dexa_ls !== "" && activeRx.dexa_ls !== "-" ? activeRx.dexa_ls : 
+                            (activeRx.ls !== undefined && activeRx.ls !== null && activeRx.ls !== "" && activeRx.ls !== "-" ? activeRx.ls : 
+                            (activeRx.lateral_spine !== undefined && activeRx.lateral_spine !== null && activeRx.lateral_spine !== "" && activeRx.lateral_spine !== "-" ? activeRx.lateral_spine : ''));
+                
+                let rawHl = activeRx.dexa_hl !== undefined && activeRx.dexa_hl !== null && activeRx.dexa_hl !== "" && activeRx.dexa_hl !== "-" ? activeRx.dexa_hl : 
+                            (activeRx.hl !== undefined && activeRx.hl !== null && activeRx.hl !== "" && activeRx.hl !== "-" ? activeRx.hl : 
+                            (activeRx.hip_lumbar_spine !== undefined && activeRx.hip_lumbar_spine !== null && activeRx.hip_lumbar_spine !== "" && activeRx.hip_lumbar_spine !== "-" ? activeRx.hip_lumbar_spine : ''));
+
+                let lsDisp = rawLs !== '' ? String(rawLs).trim() : '--';
+                let hlDisp = rawHl !== '' ? String(rawHl).trim() : '--';
+
+                const isDexaMode = currentMode.includes('DEXA') || activeRx.selected_mode === 'DEXA';
+                const isAnnualMode = currentMode.includes('ANNUAL') || activeRx.selected_mode === 'ANNUAL';
+
+                if (isDexaMode) {
+                    wrapperLsInline.style.display = "inline-block";
+                    wrapperHlInline.style.display = "inline-block";
+                    document.getElementById('outLsInline').textContent = lsDisp;
+                    document.getElementById('outHlInline').textContent = hlDisp;
+                } else {
+                    wrapperLsInline.style.display = "none";
+                    wrapperHlInline.style.display = "none";
+                }
+
+                // Check if record was created via Manual Prescription
+                const isManualRecord = Boolean(activeRx.hc_selections || activeRx.vit_selections || activeRx.fe_selections || activeRx.dexa_select_option);
+                const medContainer = document.getElementById('medicationPrintContainer');
+                medContainer.innerHTML = '';
+
+                if (isManualRecord) {
+                    // --- MANUAL PRESCRIPTION RENDERING LOGIC ---
+                    let manualLines = [];
+
+                    // 1. Homocysteine Selections
+                    if (Array.isArray(activeRx.hc_selections)) {
+                        const hasNone = activeRx.hc_selections.includes("NONE");
+                        if (!hasNone) {
+                            activeRx.hc_selections.forEach(item => {
+                                if (item && item !== "-") {
+                                    manualLines.push(item);
+                                }
+                            });
+                        }
+                    }
+
+                    // 2. Vit D Selections + Dosage
+                    if (Array.isArray(activeRx.vit_selections)) {
+                        const validVit = activeRx.vit_selections.filter(item => item && item !== "-" && item !== "NONE");
+                        if (validVit.length > 0) {
+                            const vitDosage = (activeRx.vit_dosage && activeRx.vit_dosage !== "-") ? ` ${activeRx.vit_dosage}` : "";
+                            validVit.forEach((item, idx) => {
+                                // Append dosage duration to the selected option
+                                manualLines.push(`${item}${idx === validVit.length - 1 ? vitDosage : ''}`);
+                            });
+                        }
+                    }
+
+                    // 3. Ferritin Selections + Dosage
+                    if (Array.isArray(activeRx.fe_selections)) {
+                        const validFe = activeRx.fe_selections.filter(item => item && item !== "-" && item !== "NONE");
+                        if (validFe.length > 0) {
+                            const feDosage = (activeRx.fe_dosage && activeRx.fe_dosage !== "-") ? ` ${activeRx.fe_dosage}` : "";
+                            validFe.forEach((item, idx) => {
+                                manualLines.push(`${item}${idx === validFe.length - 1 ? feDosage : ''}`);
+                            });
+                        }
+                    }
+
+                    // 4. DEXA Scan Manual Selection + Dosage
+                    if (isDexaMode && activeRx.dexa_select_option && activeRx.dexa_select_option !== "-") {
+                        const dexaDosage = (activeRx.dexa_dosage && activeRx.dexa_dosage !== "-") ? ` ${activeRx.dexa_dosage}` : "";
+                        manualLines.push(`${activeRx.dexa_select_option}${dexaDosage}`);
+                    }
+
+                    if (manualLines.length === 0) {
+                        medContainer.innerHTML = "<p>No medications selected for this prescription.</p>";
+                    } else {
+                        manualLines.forEach((lineText, index) => {
+                            const itemBlock = document.createElement('div');
+                            itemBlock.className = 'med-item-block';
+                            itemBlock.innerHTML = `<span class="med-main-line">${index + 1}. ${lineText}</span>`;
+                            medContainer.appendChild(itemBlock);
+                        });
+                    }
+
+                } else {
+                    // --- AUTOMATIC PRESCRIPTION RENDERING LOGIC ---
+                    const hc = parseFloat(cleanValue(activeRx.hc_val || activeRx.hc));
+                    const vitd = parseFloat(cleanValue(activeRx.vit_d || activeRx.vitD || activeRx.vit_d_val));
+                    const flex_fe = parseFloat(cleanValue(activeRx.fe_val || activeRx.fe));
+
+                    let medGroups = [];
+
+                    if (isAnnualMode && isDexaMode && !isNaN(hc) && !isNaN(vitd) && !isNaN(flex_fe) && hc <= 7 && vitd >= 40 && flex_fe >= 60) {
+                        medGroups.push({
+                            main: { name: "TAB.BACKBONE (calcium + vit B)", dosageEn: "Daily one after dinner", dosageMr: "रोज रात्रीच्या जेवणानंतर एक गोळी", durationEn: "Forever", durationMr: "कायम" },
+                            followUp: null
+                        });
+                    } else {
+                        if (!isNaN(hc)) {
+                            if (hc >= 7 && hc <= 19) {
+                                medGroups.push({
+                                    main: { name: "TAB.CELOL/SUPRACAL(Calcium)", dosageEn: "Daily one after dinner", dosageMr: "रोज रात्रीच्या जेवणानंतर एक गोळी", durationEn: "Forever", durationMr: "कायम" },
+                                    followUp: null
+                                });
+                                medGroups.push({
+                                    main: { name: "TAB.SUBNEURO B6/ MALTIDA FORTE / ME 12 OD (Vit B12)", dosageEn: "After breakfast alternate day", dosageMr: "नाश्त्यानंतर एक दिवसाआड ", durationEn: "Forever", durationMr: "कायम" },
+                                    followUp: null
+                                });
+                            } else if (hc > 20) {
+                                medGroups.push({
+                                    main: { name: "TAB.CELOL/SUPRACAL(Calcium)", dosageEn: "Daily one after dinner", dosageMr: "रोज रात्रीच्या जेवणानंतर एक गोळी", durationEn: "Forever", durationMr: "कायम" },
+                                    followUp: null
+                                });
+                                medGroups.push({
+                                    main: { name: "INJ. NERVIJEN 1500 plus", dosageEn: "Once a week", dosageMr: "आठवड्यातून एकदा", durationEn: "For 6 weeks. Then start following tablet", durationMr: "६ आठवड्यांसाठी. नंतर खालील गोळी सुरू करणे" },
+                                    followUp: { name: "TAB.SUBNEURO B6/ MALTIDA FORTE / ME 12 OD (Vit B12)", dosageEn: "After breakfast alternate day", dosageMr: "नाश्त्यानंतर एक दिवसाआड ", durationEn: "Forever", durationMr: "कायम" }
+                                });
+                            } else if (hc < 7) {
+                                medGroups.push({
+                                    main: { name: "TAB.CELOL/SUPRACAL(Calcium)", dosageEn: "Daily one after dinner", dosageMr: "रोज रात्रीच्या जेवणानंतर एक गोळी", durationEn: "Forever", durationMr: "कायम" },
+                                    followUp: null
+                                });
+                            }
+                        }
+
+                        if (!isNaN(vitd)) {
+                            if (vitd > 70) {
+                                medGroups.push({
+                                    main: { name: "TAB.UPRISE D3 60 K/CAP.LUMIA 60K (Vit D)", dosageEn: "Once a month", dosageMr: "महिन्यातून एकदा", durationEn: "Forever", durationMr: "नेहमी" },
+                                    followUp: null
+                                });
+                            } else if (vitd <= 10) {
+                                medGroups.push({
+                                    main: { name: "INJ. ARACHITOL 6 Lakh Unit to be taken orally (Break the ampoule, mix with a cup of milk & drink.)(अँप्युल फोडून एका कप दुधात मिक्स करून प्या.)", dosageEn: "Once a week", dosageMr: "आठवड्यातून एकदा", durationEn: "For 5 weeks. Then start following tablet", durationMr: "५ आठवड्यांसाठी. नंतर खालील गोळी सुरू करणे" },
+                                    followUp: { name: "TAB.UPRISE D3 60 K/CAP.LUMIA 60K (Vit D)", dosageEn: "Once a month", dosageMr: "महिन्यातून एकदा", durationEn: "Forever", durationMr: "कायम" }
+                                });
+                            } else if (vitd > 10 && vitd < 20) {
+                                medGroups.push({
+                                    main: { name: "INJ. ARACHITOL 6 Lakh Unit to be taken orally (Break the ampoule, mix with a cup of milk & drink.)(अँप्युल फोडून एका कप दुधात मिक्स करून प्या.)", dosageEn: "Once a week", dosageMr: "आठवड्यातून एकदा", durationEn: "For 3 weeks. Then start following tablet", durationMr: "३ आठवड्यांसाठी. नंतर खालील गोळी सुरू करणे" },
+                                    followUp: { name: "TAB.UPRISE D3 60 K/CAP.LUMIA 60K (Vit D)", dosageEn: "Once a month", dosageMr: "महिन्यातून एकदा", durationEn: "Forever", durationMr: "नेहमी" }
+                                });
+                            } else if (vitd >= 20) {
+                                medGroups.push({
+                                    main: { name: "INJ. ARACHITOL 6 Lakh Unit to be taken orally (Break the ampoule, mix with a cup of milk & drink.)(अँप्युल फोडून एका कप दुधात मिक्स करून प्या.)", dosageEn: "Single Dose", dosageMr: "एकदा", durationEn: "Then start following tablet", durationMr: "नंतर खालील गोळी सुरू करणे" },
+                                    followUp: { name: "TAB.UPRISE D3 60 K/CAP.LUMIA 60K (Vit D)", dosageEn: "Once a month", dosageMr: "महिन्यातून एकदा", durationEn: "Forever", durationMr: "नेहमी" }
+                                });
+                            }
+                        }
+
+                        if (!isNaN(flex_fe)) {
+                            if (flex_fe > 80) {
+                                medGroups.push({
+                                    main: { name: "CAP.OROFER XT / AUTRIN (ferrous ascorbate)", dosageEn: "Empty stomach. Alternate day", dosageMr: "रिकाम्या पोटी. एक दिवसा आड", durationEn: "2 months", durationMr: "२ महिन्यांसाठी" },
+                                    followUp: null
+                                });
+                                medGroups.push({
+                                    main: { name: "TAB.LIMCEE(vit C)", dosageEn: "Empty stomach. Alternate day", dosageMr: "रिकाम्या पोटी. एक दिवसा आड ", durationEn: "1 month", durationMr: "१ महिन्यासाठी" },
+                                    followUp: null
+                                });
+                            } else if (flex_fe <= 20) {
+                                medGroups.push({
+                                    main: { name: "Inj. IRNY 1 gm / FERIUM 1 gm (dilute 2 vial of 10ml or 1vial of 20ml in 250ml NS give as slow IV infusion over 40 minutes )", dosageEn: "Once in 15 days", dosageMr: "१५ दिवसांतून एकदा", durationEn: "3 doses.Then start following tablet", durationMr: "३ डोस. नंतर खालील गोळी सुरू करणे" },
+                                    followUp: { name: "CAP.OROFER XT / AUTRIN (ferrous ascorbate)", dosageEn: "Empty stomach. Alternate day", dosageMr: "रिकाम्या पोटी. एक दिवसा आड", durationEn: "12 months", durationMr: "१२ महिन्यांसाठी" }
+                                });
+                                medGroups.push({
+                                    main: { name: "TAB.LIMCEE(vit C)", dosageEn: "Empty stomach. Alternate day", dosageMr: "रिकाम्या पोटी. एक दिवसा आड ", durationEn: "6 months", durationMr: "6 महिन्यांसाठी" },
+                                    followUp: null
+                                });
+                            } else if (flex_fe > 20 && flex_fe < 30) {
+                                medGroups.push({
+                                    main: { name: "Inj. IRNY 1 gm / FERIUM 1 gm (dilute 2 vial of 10ml or 1vial of 20ml in 250ml NS give as slow IV infusion over 40 minutes )", dosageEn: "Once in 15 days", dosageMr: "१५ दिवसांतून एकदा", durationEn: "2 doses. Then start following tablet", durationMr: "२ डोस. नंतर खालील गोळी सुरू करणे" },
+                                    followUp: { name: "CAP.OROFER XT / AUTRIN (ferrous ascorbate)", dosageEn: "Empty stomach. Alternate day", dosageMr: "रिकाम्या पोटी. एक दिवसा आड", durationEn: "6 months", durationMr: "6 महिन्यांसाठी" }
+                                });
+                                medGroups.push({
+                                    main: { name: "TAB.LIMCEE(vit C)", dosageEn: "Empty stomach. Alternate day", dosageMr: "रिकाम्या पोटी. एक दिवसा आड ", durationEn: "3 months", durationMr: "3 महिन्यांसाठी" },
+                                    followUp: null
+                                });
+                            } else if (flex_fe >= 30 && flex_fe < 50) {
+                                medGroups.push({
+                                    main: { name: "CAP.OROFER XT / AUTRIN (ferrous ascorbate)", dosageEn: "Empty stomach. Alternate day", dosageMr: "रिकाम्या पोटी. एक दिवसा आड", durationEn: "12 months", durationMr: "१२ महिन्यांसाठी" },
+                                    followUp: null
+                                });
+                                medGroups.push({
+                                    main: { name: "TAB.LIMCEE(vit C)", dosageEn: "Empty stomach. Alternate day", dosageMr: "रिकाम्या पोटी. एक दिवसा आड ", durationEn: "6 months", durationMr: "6 महिन्यांसाठी" },
+                                    followUp: null
+                                });
+                            } else if (flex_fe >= 50 && flex_fe <= 80) {
+                                medGroups.push({
+                                    main: { name: "CAP.OROFER XT / AUTRIN (ferrous ascorbate)", dosageEn: "Empty stomach. Alternate day", dosageMr: "रिकाम्या पोटी. एक दिवसा आड", durationEn: "6 months", durationMr: "6 महिन्यांसाठी" },
+                                    followUp: null
+                                });
+                                medGroups.push({
+                                    main: { name: "TAB.LIMCEE(vit C)", dosageEn: "Empty stomach. Alternate day", dosageMr: "रिकाम्या पोटी. एक दिवसा आड ", durationEn: "3 months", durationMr: "3 महिन्यांसाठी" },
+                                    followUp: null
+                                });
+                            }
+                        }
+                    }
+
+                    if (isDexaMode) {
+                        const parsedLs = parseFloat(rawLs);
+                        const parsedHl = parseFloat(rawHl);
+
+                        if (!isNaN(parsedLs) && !isNaN(parsedHl)) {
+                            if (parsedLs >= -2.5 && parsedHl >= -2.5) {
+                                medGroups.push({
+                                    main: { name: "Tab.IDROFOS", dosageEn: "once in a month", dosageMr: "महिन्‍यातून एकदा", durationEn: "for 1 year", durationMr: "१ वर्षासाठी" },
+                                    followUp: null
+                                });
+                            } else if (parsedLs < -2.5 && parsedHl < -2.5) {
+                                medGroups.push({
+                                    main: { name: "Inj. Bonista", dosageEn: "once in a year", dosageMr: "वर्षातून एकदा", durationEn: "for 1 year", durationMr: "१ वर्षासाठी" },
+                                    followUp: null
+                                });
+                            } else if (parsedLs >= -2.5 || parsedHl <= -2.5) {
+                                medGroups.push({
+                                    main: { name: "Inj. Bonista", dosageEn: "once in a year", dosageMr: "वर्षातून एकदा", durationEn: "for 1 year", durationMr: "१ वर्षासाठी" },
+                                    followUp: null
+                                });
+                            }
+                        }
+                    }
+
+                    if (isAnnualMode) {
+                        medGroups = medGroups.filter(group => {
+                            if (group.main && group.main.name.toUpperCase().startsWith("INJ.")) {
+                                return false;
+                            }
+                            if (group.followUp && group.followUp.name.toUpperCase().startsWith("INJ.")) {
+                                group.followUp = null;
+                            }
+                            return true;
+                        });
+                    }
+
+                    if(medGroups.length === 0) {
+                        medContainer.innerHTML = "<p>No specific medications triggered based on lab values.</p>";
+                    }
+
+                    let bulletNumber = 1;
+                    medGroups.forEach((group) => {
+                        const itemBlock = document.createElement('div');
+                        itemBlock.className = 'med-item-block';
+
+                        let blockHtml = `
+                            <span class="med-main-line">${bulletNumber}. ${group.main.name} ${group.main.dosageEn} (${group.main.dosageMr}) ${group.main.durationEn} (${group.main.durationMr})</span>
+                        `;
+                        bulletNumber++;
+
+                        if (group.followUp) {
+                            blockHtml += `
+                                <span class="med-followup-line">${group.followUp.name} ${group.followUp.dosageEn} (${group.followUp.dosageMr}) ${group.followUp.durationEn} (${group.followUp.durationMr})</span>
+                            `;
+                        }
+
+                        itemBlock.innerHTML = blockHtml;
+                        medContainer.appendChild(itemBlock);
+                    });
+                }
+
+                // Bottom Conditional Block (Annual / DEXA follow-up text)
+                const conditionalBlock = document.getElementById('outConditionalBlock');
+                let rawCustomDate = activeRx.follow_up_date || activeRx.custom_val || activeRx.date || '';
+                let parsedDateStr = rawCustomDate;
+                
+                try {
+                    if(rawCustomDate && rawCustomDate !== "-") {
+                        const parsedDate = new Date(rawCustomDate);
+                        if(!isNaN(parsedDate.getTime())) {
+                            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                            parsedDateStr = `${parsedDate.getDate()} ${months[parsedDate.getMonth()]}`;
+                        }
+                    }
+                } catch(e) {}
+
+                if (isAnnualMode && isDexaMode) {
+                    conditionalBlock.style.display = "block";
+                    conditionalBlock.textContent = `Do 1)Dexa scan of lat. spine and Hip AP in ${parsedDateStr !== '-' ? parsedDateStr : ''} 2) serum homocysteine and ferritin 3) x ray of ${shoulderValue} TRUE AP & Axial view Every year for follow up.`;
+                } else if (isAnnualMode) {
+                    conditionalBlock.style.display = "block";
+                    conditionalBlock.textContent = `Annuals follow up with 1) Serum Homocystine and Ferritin 2) X ray ${shoulderValue} Shoulder TRUE AP and AXIAL view On ${parsedDateStr !== '-' ? parsedDateStr : ''} every year for follow up`;
+                } else if (isDexaMode) {
+                    conditionalBlock.style.display = "block";
+                    conditionalBlock.innerText = "Repeat DEXA Scan after 1 year";
+                } else {
+                    conditionalBlock.style.display = "none";
+                    conditionalBlock.textContent = "";
+                }
+
+                autoAdjustFontLayout();
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loadingState').textContent = "Failed to sync profiles from the Firebase node stack.";
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const recordId = urlParams.get('id');
+            const versionId = urlParams.get('version'); 
+
+            if(recordId) {
+                fetchPrescriptionData(recordId, versionId);
+            } else {
+                document.getElementById('loadingState').textContent = "Error: No prescription ID reference found in active pointer.";
+            }
+        });
+    </script>
+</body>
+</html>

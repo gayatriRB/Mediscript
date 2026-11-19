@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediRx - Secure Access Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0b132b;
+        }
+
+        /* Ambient Medical Tech Background Simulation */
+        .lock-screen-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('img8.avif');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.8s cubic-bezier(0.1, 0.76, 0.55, 0.94);
+            z-index: 2;
+            cursor: pointer;
+        }
+
+        /* Glassmorphism Time & Status Container */
+        .lock-container {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 3rem 4rem;
+            border-radius: 24px;
+            text-align: center;
+            color: #ffffff;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            transition: all 0.4s ease;
+        }
+
+        .lock-screen-bg:hover .lock-container {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 20px 50px rgba(56, 189, 248, 0.15);
+            transform: scale(1.02);
+        }
+
+        .time-display {
+            font-size: 4.5rem;
+            font-weight: 300;
+            letter-spacing: -2px;
+            color: #ffffff;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            line-height: 1;
+        }
+
+        .date-display {
+            font-size: 1.2rem;
+            color: #eef1f5;
+            margin-top: 10px;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        /* Interactive Action Element */
+        .action-prompt {
+            margin-top: 2.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #38bdf8, #0284c7);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-decoration: none;
+            box-shadow: 0 8px 20px rgba(2, 132, 199, 0.3);
+            transition: all 0.3s ease;
+            opacity: 0.85;
+        }
+
+        .action-prompt:hover {
+            opacity: 1;
+            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .action-prompt span {
+            transition: transform 0.3s ease;
+        }
+
+        .action-prompt:hover span {
+            transform: translateX(6px);
+        }
+
+        /* Subtle animated neural lines in background */
+        .decor-line {
+            position: absolute;
+            width: 300px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.3), transparent);
+            animation: moveLine 6s infinite linear;
+        }
+
+        @keyframes moveLine {
+            0% { left: -300px; top: 20%; }
+            100% { left: 100%; top: 20%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="decor-line"></div>
+
+    <div class="lock-screen-bg" id="lockScreen" onclick="navigateToHome()">
+        <div class="lock-container">
+            <div class="time-display" id="time">00:00 AM</div>
+            <div class="date-display" id="date">Loading System Date...</div>
+            
+            <a href="home.html" class="action-prompt" onclick="event.stopPropagation(); navigateToHome();">
+                Welcome to MediRx!! <span>&rarr;</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Live Clock Implementation
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            
+            hours = hours % 12;
+            hours = hours ? hours : 12; // Handle midnight (0) as 12
+            const displayHours = String(hours).padStart(2, '0');
+
+            document.getElementById('time').textContent = `${displayHours}:${minutes} ${ampm}`;
+
+            const options = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+            document.getElementById('date').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // Run clock instantly and set interval
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Ripple/Click Transition to Home
+        function navigateToHome() {
+            const screen = document.getElementById('lockScreen');
+            screen.style.transform = 'translateY(-100%)';
+            setTimeout(() => {
+                window.location.href = 'home.html';
+            }, 600);
+        }
+    </script>
+</body>
+</html>
